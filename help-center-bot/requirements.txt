@@ -1,2 +1,4 @@
 Flask==2.3.3
 twilio==9.0.1
+gunicorn
+python-dotenv  
