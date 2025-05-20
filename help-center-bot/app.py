@@ -30,7 +30,12 @@ DEPARTMENT_EMAILS = {
 EMAIL_SENDER = 'namanspiro@gmail.com'
 EMAIL_PASSWORD = "mjqqnhpxxnzvxdxa"
  
-CSV_FILE = 'chatbot\help_center_issues.csv'
+# CSV_FILE = 'chatbot\help_center_issues.csv'
+
+if os.environ.get("RENDER") == "true": 
+    CSV_FILE = '/tmp/help_center_issues.csv'
+else:
+    CSV_FILE = 'help_center_issues.csv'
  
 @app.route('/webhook', methods=['POST'])
 def whatsapp_webhook():
