@@ -5,6 +5,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import csv
 import os
+import sqlite3
  
 app = Flask(__name__)
  
@@ -32,10 +33,10 @@ EMAIL_PASSWORD = "mjqqnhpxxnzvxdxa"
  
 # CSV_FILE = 'chatbot\help_center_issues.csv'
 
-if os.environ.get("RENDER") == "true": 
-    CSV_FILE = '/tmp/help_center_issues.csv'
-else:
-    CSV_FILE = 'help_center_issues.csv'
+# if os.environ.get("RENDER") == "true": 
+#     CSV_FILE = '/tmp/help_center_issues.csv'
+# else:
+#     CSV_FILE = 'help_center_issues.csv'
  
 @app.route('/webhook', methods=['POST'])
 def whatsapp_webhook():
@@ -113,23 +114,47 @@ def whatsapp_webhook():
 def format_options(options):
     return "\n".join([f"{i+1}. {opt}" for i, opt in enumerate(options)])
  
-def store_issue(user, session):
-    if not os.path.exists(CSV_FILE):
-        with open(CSV_FILE, mode = 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(["Phone_no", "Country", "Department", "Problem", "Priority"])
+# def store_issue(user, session):
+#     if not os.path.exists(CSV_FILE):
+#         with open(CSV_FILE, mode = 'w', newline='') as f:
+#             writer = csv.writer(f)
+#             writer.writerow(["Phone_no", "Country", "Department", "Problem", "Priority"])
  
-    with open(CSV_FILE, mode = 'a', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow([
+#     with open(CSV_FILE, mode = 'a', newline='') as f:
+#         writer = csv.writer(f)
+#         writer.writerow([
+#             user,
+#             session.get('country'),
+#             session.get('department'),
+#             session.get('problem'),
+#             session.get('priority')
+#         ])
+ 
+#     send_email_alert(user, session)
+
+def store_issue(user, session):
+    try:
+        conn = sqlite3.connect('help_center.db')
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            INSERT INTO issues (phone_no, country, department, problem, priority)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (
             user,
             session.get('country'),
             session.get('department'),
             session.get('problem'),
             session.get('priority')
-        ])
- 
-    send_email_alert(user, session)
+        ))
+
+        conn.commit()
+        conn.close()
+        print("Issue saved to SQLite.")
+        send_email_alert(user, session)
+
+    except Exception as e:
+        print(f"Error saving issue to database: {e}")
  
 def send_email_alert(user, session):
     subject = f"[Help Center] New query from {session.get('country')}"
