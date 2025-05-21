@@ -15,10 +15,12 @@ A WhatsApp-based help center bot built using **Flask**, integrated with **Twilio
 
 ## Project Structure
 
+```
 help-center-bot/
-├── app.py # Main Flask app
-├── requirements.txt # Python dependencies
-└── README.md 
+├── app.py              # Main Flask app
+├── requirements.txt    # Python dependencies
+└── README.md           # Project documentation
+```
 
 
 

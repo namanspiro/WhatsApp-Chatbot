@@ -72,7 +72,7 @@ def whatsapp_webhook():
  
     elif session['step'] == 'department':
         if incoming_msg.isdigit() and 1 <= int(incoming_msg) <= len(DEPARTMENTS):
-            selected = DEPARTMENTS[int(incoming_msg) - 1]
+            selected   = DEPARTMENTS[int(incoming_msg) - 1]
             if selected.lower() == 'other':
                 msg.body("Please type the Department's name: ")
                 session['step'] = 'custom_department'
