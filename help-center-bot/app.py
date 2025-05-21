@@ -5,10 +5,18 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import csv
 import os
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
+# import sqlite3
  
 app = Flask(__name__)
- 
+
+DB_HOST = "dpg-d0mm7kjuibrs73eqos30-a.singapore-postgres.render.com"
+DB_NAME = "help_center_db"
+DB_USER = "help_center_db_user"
+DB_PASSWORD = "24tTlvp6pFWMeFtaGHOnzuxJ48bXNKPB"
+DB_PORT = "5432"
+
 user_sessions = {}
  
 COUNTRIES = ['Togo', 'Benin', 'Kenya', 'Rwanda', 'Uganda', 'Tanzania', 'Cameroon', 'Other']
@@ -134,27 +142,48 @@ def format_options(options):
 
 def store_issue(user, session):
     try:
-        conn = sqlite3.connect('help_center.db')
-        cursor = conn.cursor()
+        conn = psycopg2.connect(
+            host="dpg-d0mm7kjuibrs73eqos30-a.singapore-postgres.render.com",
+            dbname="help_center_db",
+            user="help_center_db_user",
+            password="24tTlvp6pFWMeFtaGHOnzuxJ48bXNKPB",
+            port="5432"
+        )
+        cur = conn.cursor()
 
-        cursor.execute('''
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS issues (
+                id SERIAL PRIMARY KEY,
+                phone_no TEXT,
+                country TEXT,
+                department TEXT,
+                problem TEXT,
+                priority TEXT
+            );
+        """)
+        conn.commit()
+
+        cur.execute("""
             INSERT INTO issues (phone_no, country, department, problem, priority)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (
+            VALUES (%s, %s, %s, %s, %s);
+        """, (
             user,
             session.get('country'),
             session.get('department'),
             session.get('problem'),
             session.get('priority')
         ))
-
         conn.commit()
-        conn.close()
-        print("Issue saved to SQLite.")
-        send_email_alert(user, session)
 
+        cur.close()
+        conn.close()
+        print("✅ Issue saved to PostgreSQL")
     except Exception as e:
-        print(f"Error saving issue to database: {e}")
+        print(f"❌ Error saving to PostgreSQL: {e}")
+
+    send_email_alert(user, session)
+
+
  
 def send_email_alert(user, session):
     subject = f"[Help Center] New query from {session.get('country')}"
