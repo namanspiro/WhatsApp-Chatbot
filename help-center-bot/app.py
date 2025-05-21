@@ -3,11 +3,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import csv
-import os
 import psycopg2
-from psycopg2.extras import RealDictCursor
-# import sqlite3
  
 app = Flask(__name__)
 
@@ -39,12 +35,6 @@ DEPARTMENT_EMAILS = {
 EMAIL_SENDER = 'namanspiro@gmail.com'
 EMAIL_PASSWORD = "mjqqnhpxxnzvxdxa"
  
-# CSV_FILE = 'chatbot\help_center_issues.csv'
-
-# if os.environ.get("RENDER") == "true": 
-#     CSV_FILE = '/tmp/help_center_issues.csv'
-# else:
-#     CSV_FILE = 'help_center_issues.csv'
  
 @app.route('/webhook', methods=['POST'])
 def whatsapp_webhook():
@@ -121,24 +111,6 @@ def whatsapp_webhook():
  
 def format_options(options):
     return "\n".join([f"{i+1}. {opt}" for i, opt in enumerate(options)])
- 
-# def store_issue(user, session):
-#     if not os.path.exists(CSV_FILE):
-#         with open(CSV_FILE, mode = 'w', newline='') as f:
-#             writer = csv.writer(f)
-#             writer.writerow(["Phone_no", "Country", "Department", "Problem", "Priority"])
- 
-#     with open(CSV_FILE, mode = 'a', newline='') as f:
-#         writer = csv.writer(f)
-#         writer.writerow([
-#             user,
-#             session.get('country'),
-#             session.get('department'),
-#             session.get('problem'),
-#             session.get('priority')
-#         ])
- 
-#     send_email_alert(user, session)
 
 def store_issue(user, session):
     try:
@@ -177,9 +149,9 @@ def store_issue(user, session):
 
         cur.close()
         conn.close()
-        print("✅ Issue saved to PostgreSQL")
+        print("Issue saved to PostgreSQL")
     except Exception as e:
-        print(f"❌ Error saving to PostgreSQL: {e}")
+        print(f"Error saving to PostgreSQL: {e}")
 
     send_email_alert(user, session)
 
