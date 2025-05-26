@@ -19,24 +19,46 @@ COUNTRIES = ['Togo', 'Benin', 'Kenya', 'Rwanda', 'Uganda', 'Tanzania', 'Cameroon
 DEPARTMENTS = ['IOT S/W', 'IOT H/W', 'Athena/Atlas', 'Field Ops', 'Payments', 'Swap Station/ Energy Services', 'Sales', 'Delivery', 'Immobilization','Other']
 PRIORITIES = ['P0 – Super Urgent (Instant Response)', 'P1 – Urgent (Response within 1 hour)', 'P2 – Response by End of Day (EOD)', 'P3 – Respond by next day']
 
-DEPARTMENT_EMAILS = {
-    'IOT S/W': 'naman.singh2402@gmail.com',
-    'IOT H/W': 'naman.singh2402@gmail.com',
-    'Athena/Atlas': 'naman.singh2402@gmail.com',
-    'Field Ops': 'naman.singh2402@gmail.com',
-    'Payments': 'naman.singh@spironet.com',
-    'Swap Station/ Energy Services': 'naman.singh2402@gmail.com',
-    'Sales': 'naman.singh2402@gmail.com',
-    'Delivery': 'naman.singh2402@gmail.com',
-    'Immobilization': 'naman.singh2402@gmail.com',
-    'Other': 'naman.singh2402@gmail.com'
-}
+# DEPARTMENT_EMAILS = {
+#     'IOT S/W': 'naman.singh2402@gmail.com',
+#     'IOT H/W': 'naman.singh2402@gmail.com',
+#     'Athena/Atlas': 'naman.singh2402@gmail.com',
+#     'Field Ops': 'naman.singh2402@gmail.com',
+#     'Payments': 'naman.singh@spironet.com',
+#     'Swap Station/ Energy Services': 'naman.singh2402@gmail.com',
+#     'Sales': 'naman.singh2402@gmail.com',
+#     'Delivery': 'naman.singh2402@gmail.com',
+#     'Immobilization': 'naman.singh2402@gmail.com',
+#     'Other': 'naman.singh2402@gmail.com'
+# }
 
 EMAIL_SENDER = 'namanspiro@gmail.com'
 EMAIL_PASSWORD = "mjqqnhpxxnzvxdxa"
 
 # EMAIL_SENDER = "naman.singh@spironet.com"
 # EMAIL_PASSWORD = ""
+
+def get_dl_email(country, department):
+    try:
+        conn = psycopg2.connect(
+            DB_HOST = "dpg-d0mm7kjuibrs73eqos30-a.singapore-postgres.render.com",
+            DB_NAME = "help_center_db",
+            DB_USER = "help_center_db_user",
+            DB_PASSWORD = "24tTlvp6pFWMeFtaGHOnzuxJ48bXNKPB",
+            DB_PORT = "5432"
+        )
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT email_dl FROM distribution_lists
+            WHERE country = %s AND department = %s
+        """, (country, department))
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+        return result[0] if result else "naman.singh2402@gmail.com"
+    except Exception as e:
+        print(f"Error fetching DL: {e}")
+        return "naman.singh2402@gmail.com"
 
 
 @app.route('/webhook', methods=['POST'])
@@ -162,8 +184,8 @@ def store_issue(user, session):
 
 def send_email_alert(user, session):
     subject = f"[Help Center] New query from {session.get('country')}"
-    to_email = DEPARTMENT_EMAILS.get(session.get('department'), DEPARTMENT_EMAILS.get('Other'))
-
+    # to_email = DEPARTMENT_EMAILS.get(session.get('department'), DEPARTMENT_EMAILS.get('Other'))
+    to_email = get_dl_email(session.get('country'), session.get('department'))
     body = f"""
     New issue reported via WhatsApp Help Center:
 
